@@ -65,3 +65,8 @@ localhost:8080
 ### :fire: Now the fun starts
 
 ## _Happy Playing_ 
+
+# Please note
+> The last time I used Github pages, it was free with no need for a 
+> custom domain name and having to pay fo rit. The prices are good
+> but I'm in no positon to purchase a domain name right now.
