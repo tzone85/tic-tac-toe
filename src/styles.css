@@ -1,40 +1,44 @@
-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-family: Arial, sans-serif;
+:root {
+  --bg: #f6f8fb;
+  --grid-line: #2c3e50;
+  --x: #e74c3c;
+  --o: #3498db;
+  --win: #f1c40f;
 }
-
+body { margin: 0; padding: 2rem; background: var(--bg); font-family: system-ui, sans-serif; text-align: center; }
+h1 { color: var(--grid-line); }
 #board {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-gap: 10px;
-  margin-top: 20px;
+  grid-template-columns: repeat(3, 100px);
+  gap: 6px;
+  margin: 1rem auto;
+  width: max-content;
+  background: var(--grid-line);
+  padding: 6px;
+  border-radius: 6px;
 }
-
 .square {
+  background: white;
   width: 100px;
   height: 100px;
-  background-color: lightgray;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 50px;
+  justify-content: center;
+  font-size: 3rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.square:hover, .square:focus { background: #ecf0f1; outline: none; }
+.square.winning-line { background: var(--win); }
+#message { margin-top: 1rem; font-size: 1.25rem; min-height: 1.5rem; }
+#reset {
+  margin-top: 1rem;
+  background: var(--grid-line);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
   cursor: pointer;
 }
-
-#message {
-  margin-top: 20px;
-}
-
-button {
-  margin-top: 20px;
-}
-
-@media (max-width: 480px) {
-  .square {
-    width: 80px;
-    height: 80px;
-    font-size: 40px;
-  }
-}
+#reset:hover { background: #1a252f; }

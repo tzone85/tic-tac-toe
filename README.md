@@ -1,72 +1,115 @@
-# Tic-Tac-Toe Game
+# Tic-Tac-Toe
 
->This is the old age Tic-Tac-Toe game from back when _Dinosaurs_ romed the earth, being played on the browser.
+Browser tic-tac-toe in TypeScript, with a layered separation between pure
+game state and DOM bindings.
 
-###
-## :toolbox: Technologies Used
- - **JavaScript** For the functionality of the game
- - **TypeScript** To add more power to JavaScript and ensure more secure code
- - **HTML** Serving as the skeleton for the web application
- - **CSS** Giving the look and feel for the web application
+[![CI](https://github.com/tzone85/tic-tac-toe/actions/workflows/ci.yml/badge.svg)](https://github.com/tzone85/tic-tac-toe/actions/workflows/ci.yml)
+![Node 20+](https://img.shields.io/badge/node-20%2B-339933)
+![TypeScript 5](https://img.shields.io/badge/typescript-5-3178c6)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-## System Requirements
- - `NodeJS v12.20 or later`
- - Have a web server of your liking, Nginx or Apache work fine
- 
-### Prerequisites
+The original repo had the right tools listed (TypeScript, Playwright, Vitest,
+Dockerfile) but nothing wired together — module-level mutable state in
+`script.ts`, a Playwright config pointing at `http://google.com/` (a stray
+placeholder from a tutorial), the compiled `script.js` committed alongside
+the source, and no actual tests on the game class. This rewrite assembles
+the parts properly.
 
-Make sure you have the following tools on your machine:
+## Bugs / smells fixed during the port
 
- - A code editor (I used VS Code)
- - A terminal or integrated terminal with your code editor
- - Docker Desktop ( _optional_ ): [Docker](https://docs.docker.com/get-docker/)
- - PlayWright: [PlayWright](https://playwright.dev/)
- - ViTest: [ViTest](https://vitest.dev/)
+| File / area (original)               | Issue                                                                                            |
+|--------------------------------------|--------------------------------------------------------------------------------------------------|
+| `playwright.config.ts`               | `baseURL: 'http://google.com/'` — placeholder from a Playwright tutorial. Replaced with a real Vite preview server. |
+| `src/script.ts`                      | Module-level `let board`, `let currentPlayer`, `let gameState` — untestable; every test imports a frozen state. Extracted to a `TicTacToe` class. |
+| `src/script.js`                      | Compiled output committed alongside the source. Removed; Vite handles bundling now. |
+| `index.html`                         | Loaded `src/script.js` directly — Vite bundle now serves `src/main.ts`. |
+| `src/tests/`                         | Files existed but couldn't run (wrong runner, wrong imports, no config). Replaced with a proper vitest + playwright suite. |
+| `Dockerfile`                         | Copied the dev source into `nginx/html` — served unbundled. Now multi-stage: build with node, serve `dist/` with nginx. |
 
-## Project Structure
+## Architecture
 
-```sh
-.
-├── Dockerfile
-├── README.md
-├── dist
-│   └── script.js
-├── index.html
-├── package-lock.json
-├── package.json
-├── playwright.config.ts
-├── src
-│   ├── pages
-│   │   └── example.page.ts
-│   ├── script.js
-│   ├── script.ts
-│   ├── styles.css
-│   ├── tests
-│   │   ├── example.spec.ts
-│   │   ├── ticTacToe.end2end.js
-│   │   └── ticTacToe.test.js
-│   └── tsconfig.json
-└── yaml
+### Components
+
+![Component diagram](docs/architecture/component.svg)
+
+### Move sequence
+
+![Sequence](docs/architecture/sequence_move.svg)
+
+### Deployment
+
+![Deployment](docs/architecture/deployment.svg)
+
+Diagrams are PlantUML under `docs/architecture/*.puml`; rendered SVGs are
+checked in. Regenerate with `./scripts/render_diagrams.sh`.
+
+## Game state
+
+```ts
+type Status =
+  | { kind: "in-progress"; currentPlayer: "X" | "O" }
+  | { kind: "won"; winner: "X" | "O"; line: [number, number, number] }
+  | { kind: "tie" };
+
+class TicTacToe {
+  board: readonly (("X" | "O") | null)[];
+  status: Status;
+  currentPlayer: "X" | "O";
+  play(cell: number): { ok: true; status: Status } | { ok: false; reason: string };
+  reset(): void;
+}
 ```
 
-### First Time Setup locally
-1. Clone the repository
-`git clone https://github.com/tzone85/tic-tac-toe.git`
-2. Change to the repository's directory
-`cd tic-tac-toe`
-3. `npm install`
-4. It's recommended to use your own web server (when running Windows). But as mentioned above you can use docker if on Linux or Mac. For some reason I got no errors when running on the mac, as compared to when I was on Windows. Ensure that your Docker engine is up and running.
-```sh
-docker build -t tic-tac-toe-app .
-docker run -d -p 8080:80 tic-tac-toe
-localhost:8080
+The discriminated union means the UI never has to guess what to render —
+each `status.kind` maps directly to a render branch.
+
+## Quick start
+
+```bash
+npm install
+npm run dev          # vite dev server on :5173
+npm run build        # produces dist/
+npm run preview      # serves dist/ on :4173
+npm test             # vitest + 90%/85% gate
+npm run test:e2e     # playwright vs preview
+npm run lint
+npm run typecheck    # tsc --noEmit
 ```
 
-### :fire: Now the fun starts
+Container:
+```bash
+docker build -t tic-tac-toe .
+docker run -p 8080:80 tic-tac-toe
+```
 
-## _Happy Playing_ 
+## Project layout
 
-# Please note
-> The last time I used Github pages, it was free with no need for a 
-> custom domain name and having to pay fo rit. The prices are good
-> but I'm in no positon to purchase a domain name right now.
+```
+src/
+├── main.ts                 # entry — mounts the UI on #app
+├── ui.ts                   # DOM wiring (renders, events, keyboard)
+├── game.ts                 # PURE: TicTacToe class
+└── styles.css
+tests/
+├── unit/
+│   ├── game.test.ts        # 13 tests: legal moves, wins, ties, reset
+│   └── ui.test.ts          # 6 tests: render, click, keyboard, reset, win highlight
+└── e2e/play.spec.ts        # 4 Playwright flows
+docs/architecture/          # PlantUML + SVGs
+nginx/default.conf          # SPA fallback for the runtime image
+Dockerfile                  # multi-stage build → nginx
+.github/workflows/ci.yml
+```
+
+## Tests
+
+| Suite                     | Count | What                                                          |
+|---------------------------|-------|---------------------------------------------------------------|
+| `tests/unit/game.test.ts` | 13    | Start state, legal/illegal moves, win lines, tie, reset       |
+| `tests/unit/ui.test.ts`   | 6     | DOM render, click, keyboard, reset button, win-line highlight |
+| `tests/e2e/play.spec.ts`  | 4     | Initial load, top-row win, reset, invalid-move feedback       |
+| **Total**                 | **23** | 90% line / 85% branch gate on `src/**`                       |
+
+## License
+
+MIT — see [LICENSE](LICENSE).
