@@ -1,0 +1,25 @@
+@startuml sequence_move
+title Sequence — player makes a move
+
+skinparam shadowing false
+
+actor User
+participant ".square div" as Sq
+participant "ui.ts" as UI
+participant "TicTacToe" as Game
+
+User -> Sq : click
+Sq -> UI : attempt(cell)
+UI -> Game : play(cell)
+alt cell out of range / taken / game over
+  Game --> UI : {ok:false, reason}
+  UI -> UI : message.textContent = "Invalid: ${reason}"
+else legal move
+  Game -> Game : place mark, find winning line OR tie OR swap player
+  Game --> UI : {ok:true, status}
+  UI -> UI : re-render board + message
+  alt status.kind = "won"
+    UI -> UI : add .winning-line to the 3 cells
+  end
+end
+@enduml

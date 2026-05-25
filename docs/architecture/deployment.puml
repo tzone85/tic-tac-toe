@@ -1,0 +1,14 @@
+@startuml deployment
+title Deployment — nginx static SPA
+
+skinparam shadowing false
+
+node "Browser" as browser
+node "Container" as web {
+  [nginx :80]
+  folder "dist/" as dist
+}
+
+[Vite build] --> dist : multi-stage Dockerfile
+browser --> [nginx :80] : HTTP
+@enduml

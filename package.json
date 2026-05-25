@@ -1,16 +1,31 @@
 {
-  "name": "tick-tack-toe",
+  "name": "tic-tac-toe",
+  "private": true,
   "version": "1.0.0",
-  "description": "tic tac toe",
-  "main": "script.js",
+  "description": "Browser tic-tac-toe — TypeScript, Vite, Vitest, Playwright.",
+  "type": "module",
+  "engines": { "node": ">=20" },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
   },
-  "author": "thando mini",
-  "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.34.3",
-    "playwright": "^1.34.3",
-    "vitest": "^0.31.2"
+    "@eslint/js": "^9.18.0",
+    "@playwright/test": "^1.49.1",
+    "@vitest/coverage-v8": "^2.1.8",
+    "@types/node": "^22.10.5",
+    "eslint": "^9.18.0",
+    "globals": "^15.14.0",
+    "happy-dom": "^16.3.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.19.1",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
   }
 }

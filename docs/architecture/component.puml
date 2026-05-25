@@ -1,0 +1,35 @@
+@startuml component
+title Tic-Tac-Toe — Component Architecture
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor Player
+
+package "src/" {
+  [main.ts\n(entry)] as main
+  [TicTacToe\n(pure logic, TS)] as game
+  [ui.ts\n(DOM bindings)] as ui
+  [styles.css] as css
+}
+
+cloud "DOM\n(#app)" as dom
+
+Player --> dom : click / keyboard
+dom --> ui : event handlers
+ui --> game : play(cell), reset(), board, status
+game --> ui : returns Result + Status
+ui --> dom : re-render squares + message + win line
+
+main --> game : new TicTacToe()
+main --> ui : mount(root, game)
+main --> dom : exposes window.__ttt for e2e
+
+note right of game
+  Discriminated-union Status:
+    {kind:"in-progress", currentPlayer}
+    {kind:"won", winner, line}
+    {kind:"tie"}
+  No DOM access.
+end note
+@enduml
